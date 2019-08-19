@@ -17,7 +17,7 @@ struct Message<'a> {
 impl<'a> TryFrom<&'a Vec<u8>> for Message<'a> {
     // You probably want your own error type here
     // I used this here because it just works
-    type Error = Box<Error>;
+    type Error = Box<dyn Error>;
 
     fn try_from(bytes: &'a Vec<u8>) -> Result<Self, Self::Error> {
         let message = str::from_utf8(bytes)?;
