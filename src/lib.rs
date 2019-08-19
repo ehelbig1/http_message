@@ -37,7 +37,6 @@ impl<'a> TryFrom<&'a Vec<u8>> for Message<'a> {
     }
 }
 
-
 #[derive(Debug)]
 enum StartLine<'a> {
     Request(RequestLine<'a>),
@@ -53,12 +52,12 @@ struct RequestLine<'a> {
 
 impl<'a> RequestLine<'a> {
     fn new(start_line: &'a str) -> Self {
-        let elements: Vec<&str> = start_line.split_whitespace().collect();
+        let mut iter = start_line.split_whitespace();
 
         RequestLine {
-            method: elements[0],
-            uri: elements[1],
-            version: elements[2],
+            method: iter.next().expect("Missing method"),
+            uri: iter.next().expect("Missing uri"),
+            version: iter.next().expect("Missing version"),
         }
     }
 }
@@ -88,13 +87,11 @@ impl<'a> Headers<'a> {
         let mut headers_map: HashMap<&'a str, Option<&'a str>> = HashMap::new();
 
         for header in headers.iter() {
-            let header: Vec<&str> = header.split(": ").collect();
-
-            if header.len() == 2 {
-                headers_map.insert(header[0], Some(header[1]));
-            } else {
-                headers_map.insert(header[0], None);
-            }
+            // Split returns an iterator so we can save ourself a Vec allocation
+            // by using the iterator directly instead of collect
+            // This means that this should probably return a Result
+            let mut iter = header.split(": ");
+            headers_map.insert(iter.next().expect("No Key"), iter.next());
         }
 
         Headers {
@@ -154,7 +151,6 @@ mod tests {
 
     #[bench]
     fn bench_from_request_version(b: &mut Bencher) {
-
         let mock = r#"
 GET / HTTP/1.1
 Host: localhost:7878
